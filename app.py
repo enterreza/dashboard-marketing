@@ -79,7 +79,7 @@ if df is not None and not df.empty:
         )
 
         # --- FITUR ROUNDED CORNERS ---
-        fig.update_traces(marker_cornerradius=15)
+        fig.update_traces(marker_cornerradius=10)
 
         # Konfigurasi Sumbu Y & Grid Horizontal
         fig.update_yaxes(
@@ -135,3 +135,4 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
+
