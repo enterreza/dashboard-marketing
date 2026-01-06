@@ -19,7 +19,7 @@ def load_data():
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
 
-        # Fill merged cells
+        # Fill merged cells (ffill)
         if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
         if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
@@ -75,34 +75,47 @@ if df is not None and not df.empty:
             color_discrete_sequence=px.colors.qualitative.Safe
         )
 
-        fig.update_yaxes(autorange="reversed", tickfont=dict(size=11))
+        # Konfigurasi Sumbu Y (Vertikal) & Grid Horizontal
+        fig.update_yaxes(
+            autorange="reversed", 
+            tickfont=dict(size=11),
+            showgrid=True, 
+            gridcolor='rgba(230, 230, 230, 0.6)', # Abu-abu sangat muda
+            gridwidth=1
+        )
         
-        # Penyesuaian Sumbu X ke Atas
+        # Konfigurasi Sumbu X (Horizontal) & Grid Vertikal
         if time_view == "Per Kuartal":
-            tick_vals = ['2026-01-01', '2026-04-01', '2026-07-01', '2026-10-01']
-            tick_text = ['Q1', 'Q2', 'Q3', 'Q4']
+            tick_vals = ['2026-01-01', '2026-04-01', '2026-07-01', '2026-10-01', '2027-01-01']
+            tick_text = ['Q1', 'Q2', 'Q3', 'Q4', '']
             
             fig.update_layout(
                 xaxis=dict(
-                    side='top', # PINDAHKAN KE ATAS
+                    side='top',
                     tickmode='array',
                     tickvals=tick_vals,
-                    ticktext=tick_text
+                    ticktext=tick_text,
+                    showgrid=True,
+                    gridcolor='rgba(220, 220, 220, 0.8)', # Sedikit lebih tegas untuk pembagi kuartal
+                    gridwidth=1.5
                 )
             )
         else:
             fig.update_layout(
                 xaxis=dict(
-                    side='top', # PINDAHKAN KE ATAS
+                    side='top',
                     dtick="M1",
-                    tickformat="%b %Y"
+                    tickformat="%b %Y",
+                    showgrid=True,
+                    gridcolor='rgba(230, 230, 230, 0.6)',
+                    gridwidth=1
                 )
             )
 
         # Layout Final
         fig.update_layout(
             height=chart_height,
-            margin=dict(l=10, r=10, t=50, b=10), # Menambah margin atas (t=50) agar label tidak terpotong
+            margin=dict(l=10, r=10, t=50, b=10),
             legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
             dragmode=False
         )
