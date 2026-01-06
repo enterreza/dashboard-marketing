@@ -13,6 +13,7 @@ SHEET_ID = '17PUXVz1fWFAQlAnNt02BkFPuQFbiBI5uFAOEtZUMluU'
 SHEET_NAME = 'Master'
 
 
+url = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}'
 
 # 3. Fungsi Load Data
 @st.cache_data(ttl=60)
@@ -73,5 +74,3 @@ if data is not None:
     # Tampilkan Tabel
     with st.expander("Lihat Data Detail"):
         st.write(data)
-
-
