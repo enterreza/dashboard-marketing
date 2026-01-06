@@ -32,8 +32,8 @@ def load_data():
 
         # Konversi kolom Mulai & Selesai ke format Tanggal
         # Menggunakan dayfirst=True karena format di gambar Anda adalah DD/MM/YYYY
-        df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=True, errors='coerce')
-        df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=True, errors='coerce')
+        df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=False, errors='coerce')
+        df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
 
         # Hapus baris yang tidak memiliki tanggal valid
         df = df.dropna(subset=['Mulai', 'Selesai'])
@@ -92,3 +92,4 @@ if df is not None and not df.empty:
 
 else:
     st.info("💡 Menunggu data... Pastikan di Google Sheets kolom 'Mulai' dan 'Selesai' sudah terisi dengan format tanggal yang benar (contoh: 01/01/2026).")
+
