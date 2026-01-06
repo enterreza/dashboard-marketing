@@ -7,89 +7,100 @@ import urllib.parse
 st.set_page_config(page_title="Dashboard Program Kerja 2026", layout="wide")
 st.title("📊 Live Dashboard Timeline Program Kerja")
 
-# 2. Identitas Spreadsheet (Sudah diperbarui ke 'Master')
+# 2. Identitas Spreadsheet
 SHEET_ID = '17PUXVz1fWFAQlAnNt02BkFPuQFbiBI5uFAOEtZUMluU'
 SHEET_NAME = 'Master' 
-
-# Encode URL (Meskipun 'Master' tidak ada spasi, ini tetap praktik yang aman)
 encoded_name = urllib.parse.quote(SHEET_NAME)
 url = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}'
 
 @st.cache_data(ttl=60)
 def load_data():
     try:
-        # Membaca data CSV dari Google Sheets
         df = pd.read_csv(url)
-        
-        # Bersihkan spasi di nama kolom
         df.columns = df.columns.str.strip()
 
-        # Mengisi sel kosong jika ada 'Merged Cells' pada kolom utama
-        if 'Bagian' in df.columns:
-            df['Bagian'] = df['Bagian'].ffill()
-        if 'Program Kerja' in df.columns:
-            df['Program Kerja'] = df['Program Kerja'].ffill()
+        # Fill merged cells
+        if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
+        if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
-        # Konversi kolom Mulai & Selesai ke format Tanggal
-        # Menggunakan dayfirst=True karena format di gambar Anda adalah DD/MM/YYYY
+        # Konversi Tanggal (PENTING: dayfirst=False sesuai diskusi terakhir agar 6/1 dibaca 1 Juni)
         df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=False, errors='coerce')
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
-
-        # Hapus baris yang tidak memiliki tanggal valid
         df = df.dropna(subset=['Mulai', 'Selesai'])
+
+        # Tambahkan kolom pembantu untuk Kuartal dan Bulan
+        df['Kuartal'] = df['Mulai'].dt.quarter.map({1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4'})
+        df['Bulan'] = df['Mulai'].dt.strftime('%B')
         
         return df
     except Exception as e:
-        st.error(f"Gagal memuat data dari sheet '{SHEET_NAME}': {e}")
+        st.error(f"Gagal memuat data: {e}")
         return None
 
-# 3. Jalankan Pengambilan Data
 df = load_data()
 
 if df is not None and not df.empty:
-    # Sidebar Filter
-    st.sidebar.header("Filter Dashboard")
+    # --- SIDEBAR FILTER ---
+    st.sidebar.header("Opsi Tampilan & Filter")
+
+    # 1. Filter Bagian
+    all_sections = df['Bagian'].unique()
+    selected_sections = st.sidebar.multiselect("Pilih Bagian:", all_sections, default=all_sections)
+    df_filtered = df[df['Bagian'].isin(selected_sections)]
+
+    # 2. Opsi Time Slice (Bulan / Kuartal)
+    time_view = st.sidebar.radio("Lihat Berdasarkan:", ["Semua (Tahunan)", "Per Kuartal", "Per Bulan"])
+
+    if time_view == "Per Kuartal":
+        q_options = ['Q1', 'Q2', 'Q3', 'Q4']
+        selected_q = st.sidebar.multiselect("Pilih Kuartal:", q_options, default=df_filtered['Kuartal'].unique())
+        df_filtered = df_filtered[df_filtered['Kuartal'].isin(selected_q)]
+        dtick_view = "M3" # Garis grid per 3 bulan
     
-    # Filter berdasarkan Bagian
-    if 'Bagian' in df.columns:
-        all_sections = df['Bagian'].unique()
-        selected_sections = st.sidebar.multiselect("Pilih Bagian:", all_sections, default=all_sections)
-        df_filtered = df[df['Bagian'].isin(selected_sections)]
+    elif time_view == "Per Bulan":
+        # Urutan bulan agar rapi
+        month_order = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December']
+        available_months = [m for m in month_order if m in df_filtered['Bulan'].unique()]
+        selected_m = st.sidebar.multiselect("Pilih Bulan:", available_months, default=available_months)
+        df_filtered = df_filtered[df_filtered['Bulan'].isin(selected_m)]
+        dtick_view = "M1" # Garis grid per 1 bulan
+    
     else:
-        df_filtered = df
+        dtick_view = "M1"
 
-    # 4. Membuat Grafik Timeline (Gantt Chart)
-    fig = px.timeline(
-        df_filtered, 
-        x_start="Mulai", 
-        x_end="Selesai", 
-        y="Program Kerja", 
-        color="Bagian" if 'Bagian' in df.columns else None,
-        hover_data=["Output / Deliverables"] if "Output / Deliverables" in df.columns else None,
-        color_discrete_sequence=px.colors.qualitative.Prism,
-        template="plotly_white"
-    )
+    # --- GRAFIK ---
+    if not df_filtered.empty:
+        # Tinggi dinamis agar tidak sesak di HP
+        chart_height = max(450, len(df_filtered) * 35)
 
-    # Mempercantik Tampilan Grafik
-    fig.update_yaxes(autorange="reversed")
-    fig.update_layout(
-        xaxis_title="Timeline 2026",
-        yaxis_title="",
-        height=600,
-        margin=dict(l=0, r=0, t=30, b=0),
-        xaxis=dict(
-            dtick="M1", 
-            tickformat="%b %Y"
+        fig = px.timeline(
+            df_filtered, 
+            x_start="Mulai", 
+            x_end="Selesai", 
+            y="Program Kerja", 
+            color="Bagian",
+            hover_data=["Output / Deliverables"],
+            template="plotly_white",
+            color_discrete_sequence=px.colors.qualitative.Safe
         )
-    )
 
-    # Menampilkan Grafik di Streamlit
-    st.plotly_chart(fig, use_container_width=True)
+        fig.update_yaxes(autorange="reversed", tickfont=dict(size=10))
+        fig.update_layout(
+            height=chart_height,
+            margin=dict(l=10, r=10, t=30, b=10),
+            xaxis=dict(dtick=dtick_view, tickformat="%b %Y"),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+            dragmode=False
+        )
 
-    # 5. Tampilkan Tabel Data Mentah
-    with st.expander("Lihat Detail Tabel Data"):
-        st.dataframe(df_filtered, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        
+        # Tabel Data
+        with st.expander("Lihat Detail Tabel"):
+            st.dataframe(df_filtered[['Program Kerja', 'Bagian', 'Mulai', 'Selesai', 'Kuartal']], use_container_width=True)
+    else:
+        st.warning("Tidak ada data untuk filter yang dipilih.")
 
 else:
-    st.info("💡 Menunggu data... Pastikan di Google Sheets kolom 'Mulai' dan 'Selesai' sudah terisi dengan format tanggal yang benar (contoh: 01/01/2026).")
-
+    st.info("💡 Menunggu data dari Google Sheets...")
