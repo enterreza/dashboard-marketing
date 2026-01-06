@@ -19,11 +19,11 @@ def load_data():
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
 
-        # Mengisi sel kosong (ffill) untuk merged cells
+        # Fill merged cells (ffill)
         if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
         if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
-        # Konversi Tanggal (dayfirst=False agar 6/1 dibaca 1 Juni sesuai data asli Anda)
+        # Konversi Tanggal (dayfirst=False agar 6/1 dibaca 1 Juni)
         df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=False, errors='coerce')
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
         df = df.dropna(subset=['Mulai', 'Selesai'])
@@ -47,7 +47,7 @@ if df is not None and not df.empty:
     st.sidebar.header("Opsi Tampilan & Filter")
     all_sections = df['Bagian'].unique()
     selected_sections = st.sidebar.multiselect("Pilih Bagian:", all_sections, default=all_sections)
-    df_filtered = df[df['Bagian'].isin(selected_sections)].copy()
+    df_filtered = df[df['Bagian'].isin(selected_sections)]
 
     time_view = st.sidebar.radio("Lihat Berdasarkan:", ["Semua (Tahunan)", "Per Kuartal", "Per Bulan"])
 
@@ -78,31 +78,31 @@ if df is not None and not df.empty:
             color_discrete_sequence=px.colors.qualitative.Safe
         )
 
-        # 1. FITUR: ROUNDED CORNERS (Sudut Membulat)
+        # --- FITUR ROUNDED CORNERS ---
         fig.update_traces(marker_cornerradius=15)
 
-        # 2. KONFIGURASI SUMBU Y & GRID BELAKANG
+        # Konfigurasi Sumbu Y & Grid Horizontal
         fig.update_yaxes(
             autorange="reversed", 
             tickfont=dict(size=11),
             showgrid=True, 
-            gridcolor='rgba(230, 230, 230, 0.5)',
-            layer="below traces" # Grid di belakang batang
+            gridcolor='rgba(240, 240, 240, 0.5)',
+            layer="below traces" # Sumbu mendukung "below traces"
         )
         
-        # 3. LOGIKA GARIS PEMISAH ANTAR BAGIAN (DIPERKUAT)
-        sections_list = df_filtered['Bagian'].tolist()
-        for i in range(len(sections_list) - 1):
-            if sections_list[i] != sections_list[i+1]:
+        # --- LOGIKA GARIS PEMISAH ANTAR BAGIAN ---
+        current_sections = df_filtered['Bagian'].tolist()
+        for i in range(len(current_sections) - 1):
+            if current_sections[i] != current_sections[i+1]:
                 fig.add_hline(
                     y=i + 0.5, 
                     line_dash="solid", 
-                    line_color="rgba(150, 150, 150, 0.8)", 
+                    line_color="rgba(100, 100, 100, 0.8)",
                     line_width=2,
-                    layer="below traces"
+                    layer="below" # FIXED: Gunakan "below" untuk hline
                 )
 
-        # 4. PENYESUAIAN SUMBU X (ATAS & GRID)
+        # Penyesuaian Sumbu X (Top Axis & Grid Vertikal)
         xaxis_config = dict(
             side='top',
             showgrid=True,
@@ -113,17 +113,17 @@ if df is not None and not df.empty:
         if time_view == "Per Kuartal":
             tick_vals = ['2026-01-01', '2026-04-01', '2026-07-01', '2026-10-01', '2027-01-01']
             tick_text = ['Q1', 'Q2', 'Q3', 'Q4', '']
-            xaxis_config.update(dict(tickmode='array', tickvals=tick_vals, ticktext=tick_text))
+            xaxis_config.update(dict(tickmode='array', tickvals=tick_vals, ticktext=tick_text, gridcolor='rgba(200, 200, 200, 0.6)'))
         else:
             xaxis_config.update(dict(dtick="M1", tickformat="%b %Y"))
             
         fig.update_layout(xaxis=xaxis_config)
 
-        # 5. LAYOUT FINAL
+        # Layout Final
         fig.update_layout(
             height=chart_height,
-            margin=dict(l=10, r=10, t=60, b=10),
-            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+            margin=dict(l=10, r=10, t=50, b=10),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
             dragmode=False
         )
 
