@@ -23,12 +23,12 @@ def load_data():
         if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
         if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
-        # Konversi Tanggal (dayfirst=False agar 6/1 dibaca 1 Juni)
+        # Konversi Tanggal
         df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=False, errors='coerce')
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
         df = df.dropna(subset=['Mulai', 'Selesai'])
 
-        # Pastikan data terurut berdasarkan Bagian agar garis pemisah akurat
+        # Urutkan agar pengelompokan bagian rapi
         df = df.sort_values(by=['Bagian', 'Mulai'])
 
         # Kolom pembantu filter
@@ -65,7 +65,8 @@ if df is not None and not df.empty:
 
     # --- GRAFIK ---
     if not df_filtered.empty:
-        chart_height = max(450, len(df_filtered) * 45)
+        # Tinggi dinamis (ditambah sedikit agar teks label tidak sesak)
+        chart_height = max(450, len(df_filtered) * 50)
 
         fig = px.timeline(
             df_filtered, 
@@ -73,13 +74,19 @@ if df is not None and not df.empty:
             x_end="Selesai", 
             y="Program Kerja", 
             color="Bagian",
+            text="Bagian", # MENAMPILKAN ISI KOLOM BAGIAN
             hover_data=["Output / Deliverables"],
             template="plotly_white",
             color_discrete_sequence=px.colors.qualitative.Safe
         )
 
-        # --- FITUR ROUNDED CORNERS ---
-        fig.update_traces(marker_cornerradius=10)
+        # Konfigurasi Label Teks dan Rounded Corners
+        fig.update_traces(
+            textposition='inside',      # Meletakkan teks di dalam batang
+            insidetextanchor='middle',  # Teks berada di tengah batang
+            marker_cornerradius=15,     # Sudut membulat
+            textfont=dict(size=10, color="white") # Pengaturan font label
+        )
 
         # Konfigurasi Sumbu Y & Grid Horizontal
         fig.update_yaxes(
@@ -87,33 +94,28 @@ if df is not None and not df.empty:
             tickfont=dict(size=11),
             showgrid=True, 
             gridcolor='rgba(240, 240, 240, 0.5)',
-            layer="below traces" # Sumbu mendukung "below traces"
+            layer="below traces"
         )
         
-        # --- LOGIKA GARIS PEMISAH ANTAR BAGIAN ---
+        # Garis Pemisah Antar Bagian
         current_sections = df_filtered['Bagian'].tolist()
         for i in range(len(current_sections) - 1):
             if current_sections[i] != current_sections[i+1]:
                 fig.add_hline(
                     y=i + 0.5, 
                     line_dash="solid", 
-                    line_color="rgba(100, 100, 100, 0.8)",
+                    line_color="rgba(150, 150, 150, 0.5)",
                     line_width=2,
-                    layer="below" # FIXED: Gunakan "below" untuk hline
+                    layer="below traces"
                 )
 
-        # Penyesuaian Sumbu X (Top Axis & Grid Vertikal)
-        xaxis_config = dict(
-            side='top',
-            showgrid=True,
-            gridcolor='rgba(230, 230, 230, 0.6)',
-            layer="below traces"
-        )
+        # Penyesuaian Sumbu X (Top Axis)
+        xaxis_config = dict(side='top', showgrid=True, gridcolor='rgba(230, 230, 230, 0.6)', layer="below traces")
 
         if time_view == "Per Kuartal":
             tick_vals = ['2026-01-01', '2026-04-01', '2026-07-01', '2026-10-01', '2027-01-01']
             tick_text = ['Q1', 'Q2', 'Q3', 'Q4', '']
-            xaxis_config.update(dict(tickmode='array', tickvals=tick_vals, ticktext=tick_text, gridcolor='rgba(200, 200, 200, 0.6)'))
+            xaxis_config.update(dict(tickmode='array', tickvals=tick_vals, ticktext=tick_text))
         else:
             xaxis_config.update(dict(dtick="M1", tickformat="%b %Y"))
             
@@ -122,8 +124,8 @@ if df is not None and not df.empty:
         # Layout Final
         fig.update_layout(
             height=chart_height,
-            margin=dict(l=10, r=10, t=50, b=10),
-            legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
+            margin=dict(l=10, r=10, t=60, b=10),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
             dragmode=False
         )
 
@@ -135,4 +137,3 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
-
