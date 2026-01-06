@@ -19,19 +19,15 @@ def load_data():
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
 
-        # Fill merged cells (ffill)
         if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
         if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
-        # Konversi Tanggal
         df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=False, errors='coerce')
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
         df = df.dropna(subset=['Mulai', 'Selesai'])
 
-        # Urutkan agar pengelompokan bagian rapi
         df = df.sort_values(by=['Bagian', 'Mulai'])
 
-        # Kolom pembantu filter
         df['Kuartal'] = df['Mulai'].dt.quarter.map({1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4'})
         df['Bulan_Nama'] = df['Mulai'].dt.strftime('%B')
         
@@ -43,7 +39,6 @@ def load_data():
 df = load_data()
 
 if df is not None and not df.empty:
-    # --- SIDEBAR FILTER ---
     st.sidebar.header("Opsi Tampilan & Filter")
     all_sections = df['Bagian'].unique()
     selected_sections = st.sidebar.multiselect("Pilih Bagian:", all_sections, default=all_sections)
@@ -63,9 +58,7 @@ if df is not None and not df.empty:
         selected_m = st.sidebar.multiselect("Pilih Bulan:", available_months, default=available_months)
         df_filtered = df_filtered[df_filtered['Bulan_Nama'].isin(selected_m)]
 
-    # --- GRAFIK ---
     if not df_filtered.empty:
-        # Tinggi dinamis (ditambah sedikit agar teks label tidak sesak)
         chart_height = max(450, len(df_filtered) * 50)
 
         fig = px.timeline(
@@ -74,21 +67,21 @@ if df is not None and not df.empty:
             x_end="Selesai", 
             y="Program Kerja", 
             color="Bagian",
-            text="Bagian", # MENAMPILKAN ISI KOLOM BAGIAN
+            text="Bagian",
             hover_data=["Output / Deliverables"],
             template="plotly_white",
             color_discrete_sequence=px.colors.qualitative.Safe
         )
 
-        # Konfigurasi Label Teks dan Rounded Corners
+        # Update sudut membulat dan posisi teks
         fig.update_traces(
-            textposition='inside',      # Meletakkan teks di dalam batang
-            insidetextanchor='middle',  # Teks berada di tengah batang
-            marker_cornerradius=15,     # Sudut membulat
-            textfont=dict(size=10, color="white") # Pengaturan font label
+            textposition='inside',
+            insidetextanchor='middle',
+            marker_cornerradius=15,
+            textfont=dict(size=10, color="white")
         )
 
-        # Konfigurasi Sumbu Y & Grid Horizontal
+        # Update Sumbu Y - Menggunakan 'below traces'
         fig.update_yaxes(
             autorange="reversed", 
             tickfont=dict(size=11),
@@ -97,7 +90,7 @@ if df is not None and not df.empty:
             layer="below traces"
         )
         
-        # Garis Pemisah Antar Bagian
+        # LOGIKA GARIS PEMISAH - Menggunakan 'below' (Bukan 'below traces')
         current_sections = df_filtered['Bagian'].tolist()
         for i in range(len(current_sections) - 1):
             if current_sections[i] != current_sections[i+1]:
@@ -106,10 +99,10 @@ if df is not None and not df.empty:
                     line_dash="solid", 
                     line_color="rgba(150, 150, 150, 0.5)",
                     line_width=2,
-                    layer="below traces"
+                    layer="below" # DIPERBAIKI: Harus 'below' untuk hline
                 )
 
-        # Penyesuaian Sumbu X (Top Axis)
+        # Penyesuaian Sumbu X
         xaxis_config = dict(side='top', showgrid=True, gridcolor='rgba(230, 230, 230, 0.6)', layer="below traces")
 
         if time_view == "Per Kuartal":
@@ -121,7 +114,6 @@ if df is not None and not df.empty:
             
         fig.update_layout(xaxis=xaxis_config)
 
-        # Layout Final
         fig.update_layout(
             height=chart_height,
             margin=dict(l=10, r=10, t=60, b=10),
