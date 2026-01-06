@@ -28,6 +28,9 @@ def load_data():
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
         df = df.dropna(subset=['Mulai', 'Selesai'])
 
+        # Pastikan data terurut berdasarkan Bagian agar garis pemisah akurat
+        df = df.sort_values(by=['Bagian', 'Mulai'])
+
         # Kolom pembantu filter
         df['Kuartal'] = df['Mulai'].dt.quarter.map({1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4'})
         df['Bulan_Nama'] = df['Mulai'].dt.strftime('%B')
@@ -62,7 +65,7 @@ if df is not None and not df.empty:
 
     # --- GRAFIK ---
     if not df_filtered.empty:
-        chart_height = max(450, len(df_filtered) * 40)
+        chart_height = max(450, len(df_filtered) * 45) # Sedikit ditambah tinggi per baris
 
         fig = px.timeline(
             df_filtered, 
@@ -75,42 +78,34 @@ if df is not None and not df.empty:
             color_discrete_sequence=px.colors.qualitative.Safe
         )
 
-        # Konfigurasi Sumbu Y (Vertikal) & Grid Horizontal
+        # Konfigurasi Sumbu Y & Grid Horizontal Standar
         fig.update_yaxes(
             autorange="reversed", 
             tickfont=dict(size=11),
             showgrid=True, 
-            gridcolor='rgba(230, 230, 230, 0.6)', # Abu-abu sangat muda
-            gridwidth=1
+            gridcolor='rgba(240, 240, 240, 0.5)'
         )
         
-        # Konfigurasi Sumbu X (Horizontal) & Grid Vertikal
+        # --- LOGIKA GARIS PEMISAH ANTAR BAGIAN ---
+        # Menghitung posisi garis jika ada lebih dari 1 Bagian yang ditampilkan
+        current_sections = df_filtered['Bagian'].tolist()
+        for i in range(len(current_sections) - 1):
+            if current_sections[i] != current_sections[i+1]:
+                # Menambahkan garis horizontal tebal di antara dua kategori yang berbeda
+                fig.add_hline(
+                    y=i + 0.5, 
+                    line_dash="solid", 
+                    line_color="rgba(100, 100, 100, 0.8)", # Abu-abu lebih tegas
+                    line_width=2
+                )
+
+        # Penyesuaian Sumbu X (Top Axis & Grid Vertikal)
         if time_view == "Per Kuartal":
             tick_vals = ['2026-01-01', '2026-04-01', '2026-07-01', '2026-10-01', '2027-01-01']
             tick_text = ['Q1', 'Q2', 'Q3', 'Q4', '']
-            
-            fig.update_layout(
-                xaxis=dict(
-                    side='top',
-                    tickmode='array',
-                    tickvals=tick_vals,
-                    ticktext=tick_text,
-                    showgrid=True,
-                    gridcolor='rgba(220, 220, 220, 0.8)', # Sedikit lebih tegas untuk pembagi kuartal
-                    gridwidth=1.5
-                )
-            )
+            fig.update_layout(xaxis=dict(side='top', tickmode='array', tickvals=tick_vals, ticktext=tick_text, showgrid=True, gridcolor='rgba(200, 200, 200, 0.6)'))
         else:
-            fig.update_layout(
-                xaxis=dict(
-                    side='top',
-                    dtick="M1",
-                    tickformat="%b %Y",
-                    showgrid=True,
-                    gridcolor='rgba(230, 230, 230, 0.6)',
-                    gridwidth=1
-                )
-            )
+            fig.update_layout(xaxis=dict(side='top', dtick="M1", tickformat="%b %Y", showgrid=True, gridcolor='rgba(230, 230, 230, 0.6)'))
 
         # Layout Final
         fig.update_layout(
