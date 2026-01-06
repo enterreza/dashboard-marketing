@@ -5,7 +5,7 @@ import urllib.parse
 
 # 1. Konfigurasi Halaman
 st.set_page_config(page_title="Dashboard Marketing 2026", layout="wide")
-st.title("📊 Live Dashboard Timeline Program Kerja")
+st.title("📊 Timeline Dashboard - Program Kerja Marketing helsa Group 2026")
 
 # 2. Identitas Spreadsheet
 SHEET_ID = '17PUXVz1fWFAQlAnNt02BkFPuQFbiBI5uFAOEtZUMluU'
@@ -129,4 +129,5 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
+
 
