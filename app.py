@@ -10,7 +10,7 @@ st.title("📊 Live Dashboard Timeline Program Kerja")
 # 2. Pengaturan Google Sheets
 # ID diambil dari link yang Anda berikan
 SHEET_ID = '17PUXVz1fWFAQlAnNt02BkFPuQFbiBI5uFAOEtZUMluU'
-SHEET_NAME = 'Master Marketing Card 6'
+SHEET_NAME = 'Master'
 
 # MEMPERBAIKI SPASI: Mengubah 'Master Marketing Card 6' menjadi 'Master%20Marketing%20Card%206'
 encoded_name = urllib.parse.quote(SHEET_NAME)
@@ -75,3 +75,4 @@ if data is not None:
     # Tampilkan Tabel
     with st.expander("Lihat Data Detail"):
         st.write(data)
+
