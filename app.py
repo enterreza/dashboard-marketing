@@ -10,7 +10,7 @@ st.write("Data ditarik langsung dari Google Sheets")
 
 # 1. Masukkan ID Spreadsheet Anda di sini
 SHEET_ID = '17PUXVz1fWFAQlAnNt02BkFPuQFbiBI5uFAOEtZUMluU'
-SHEET_NAME = 'Master Marketing Card 6'
+SHEET_NAME = 'Master_Marketing_Card_6'
 url = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}'
 
 # Load Data
@@ -57,4 +57,5 @@ try:
         st.write(df_filtered)
 
 except Exception as e:
+
     st.error(f"Gagal memuat data. Pastikan Link Google Sheets sudah benar dan diatur 'Anyone with the link'. Error: {e}")
