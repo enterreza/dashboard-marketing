@@ -19,7 +19,7 @@ def load_data():
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
 
-        # Mengisi sel kosong (ffill) untuk merged cells
+        # Fill merged cells
         if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
         if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
@@ -28,7 +28,7 @@ def load_data():
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
         df = df.dropna(subset=['Mulai', 'Selesai'])
 
-        # Kolom pembantu untuk Filter
+        # Kolom pembantu filter
         df['Kuartal'] = df['Mulai'].dt.quarter.map({1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4'})
         df['Bulan_Nama'] = df['Mulai'].dt.strftime('%B')
         
@@ -42,16 +42,12 @@ df = load_data()
 if df is not None and not df.empty:
     # --- SIDEBAR FILTER ---
     st.sidebar.header("Opsi Tampilan & Filter")
-
-    # 1. Filter Bagian
     all_sections = df['Bagian'].unique()
     selected_sections = st.sidebar.multiselect("Pilih Bagian:", all_sections, default=all_sections)
     df_filtered = df[df['Bagian'].isin(selected_sections)]
 
-    # 2. Opsi Time Slice
     time_view = st.sidebar.radio("Lihat Berdasarkan:", ["Semua (Tahunan)", "Per Kuartal", "Per Bulan"])
 
-    # Logika Filter Waktu
     if time_view == "Per Kuartal":
         q_options = ['Q1', 'Q2', 'Q3', 'Q4']
         selected_q = st.sidebar.multiselect("Pilih Kuartal:", q_options, default=df_filtered['Kuartal'].unique())
@@ -81,33 +77,32 @@ if df is not None and not df.empty:
 
         fig.update_yaxes(autorange="reversed", tickfont=dict(size=11))
         
-        # --- LOGIKA CUSTOM CAPTION SUMBU X ---
+        # Penyesuaian Sumbu X ke Atas
         if time_view == "Per Kuartal":
-            # Menentukan posisi label di awal setiap kuartal
             tick_vals = ['2026-01-01', '2026-04-01', '2026-07-01', '2026-10-01']
             tick_text = ['Q1', 'Q2', 'Q3', 'Q4']
             
             fig.update_layout(
                 xaxis=dict(
+                    side='top', # PINDAHKAN KE ATAS
                     tickmode='array',
                     tickvals=tick_vals,
-                    ticktext=tick_text,
-                    dtick=None
+                    ticktext=tick_text
                 )
             )
         else:
-            # Tampilan standar Bulan (Jan 2026, dst)
             fig.update_layout(
                 xaxis=dict(
+                    side='top', # PINDAHKAN KE ATAS
                     dtick="M1",
                     tickformat="%b %Y"
                 )
             )
 
-        # Layout Umum & Mobile Optimization
+        # Layout Final
         fig.update_layout(
             height=chart_height,
-            margin=dict(l=10, r=10, t=30, b=10),
+            margin=dict(l=10, r=10, t=50, b=10), # Menambah margin atas (t=50) agar label tidak terpotong
             legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
             dragmode=False
         )
@@ -118,6 +113,5 @@ if df is not None and not df.empty:
             st.dataframe(df_filtered[['Program Kerja', 'Bagian', 'Mulai', 'Selesai']], use_container_width=True)
     else:
         st.warning("Tidak ada data untuk filter yang dipilih.")
-
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
