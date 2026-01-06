@@ -65,7 +65,7 @@ if df is not None and not df.empty:
 
     # --- GRAFIK ---
     if not df_filtered.empty:
-        chart_height = max(450, len(df_filtered) * 45) # Sedikit ditambah tinggi per baris
+        chart_height = max(450, len(df_filtered) * 45)
 
         fig = px.timeline(
             df_filtered, 
@@ -78,34 +78,51 @@ if df is not None and not df.empty:
             color_discrete_sequence=px.colors.qualitative.Safe
         )
 
-        # Konfigurasi Sumbu Y & Grid Horizontal Standar
+        # ============================================================
+        # BAGIAN INI YANG MEMBUAT SUDUT MENJADI ROUNDED (MELENGKUNG)
+        # ============================================================
+        fig.update_traces(
+            marker=dict(
+                # Ubah angka ini untuk mengatur tingkat kelengkungan.
+                # Semakin besar angkanya, semakin bulat.
+                cornerradius=15 
+            )
+        )
+        # ============================================================
+
+
+        # Konfigurasi Sumbu Y & Grid Horizontal di Belakang
         fig.update_yaxes(
             autorange="reversed", 
             tickfont=dict(size=11),
             showgrid=True, 
-            gridcolor='rgba(240, 240, 240, 0.5)'
+            gridcolor='rgba(240, 240, 240, 0.5)',
+            layer="below traces" # Grid di belakang batang
         )
         
-        # --- LOGIKA GARIS PEMISAH ANTAR BAGIAN ---
-        # Menghitung posisi garis jika ada lebih dari 1 Bagian yang ditampilkan
+        # Logika Garis Pemisah Antar Bagian
         current_sections = df_filtered['Bagian'].tolist()
         for i in range(len(current_sections) - 1):
             if current_sections[i] != current_sections[i+1]:
-                # Menambahkan garis horizontal tebal di antara dua kategori yang berbeda
                 fig.add_hline(
-                    y=i + 0.5, 
-                    line_dash="solid", 
-                    line_color="rgba(100, 100, 100, 0.8)", # Abu-abu lebih tegas
-                    line_width=2
+                    y=i + 0.5, line_dash="solid", line_color="rgba(100, 100, 100, 0.8)", line_width=2,
+                    layer="below traces" 
                 )
 
-        # Penyesuaian Sumbu X (Top Axis & Grid Vertikal)
+        # Penyesuaian Sumbu X (Top Axis & Grid Vertikal di Belakang)
+        xaxis_config = dict(
+            side='top', showgrid=True, gridcolor='rgba(230, 230, 230, 0.6)',
+            layer="below traces" # Grid di belakang batang
+        )
+
         if time_view == "Per Kuartal":
             tick_vals = ['2026-01-01', '2026-04-01', '2026-07-01', '2026-10-01', '2027-01-01']
             tick_text = ['Q1', 'Q2', 'Q3', 'Q4', '']
-            fig.update_layout(xaxis=dict(side='top', tickmode='array', tickvals=tick_vals, ticktext=tick_text, showgrid=True, gridcolor='rgba(200, 200, 200, 0.6)'))
+            xaxis_config.update(dict(tickmode='array', tickvals=tick_vals, ticktext=tick_text, gridcolor='rgba(200, 200, 200, 0.6)'))
         else:
-            fig.update_layout(xaxis=dict(side='top', dtick="M1", tickformat="%b %Y", showgrid=True, gridcolor='rgba(230, 230, 230, 0.6)'))
+            xaxis_config.update(dict(dtick="M1", tickformat="%b %Y"))
+            
+        fig.update_layout(xaxis=xaxis_config)
 
         # Layout Final
         fig.update_layout(
