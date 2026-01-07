@@ -76,7 +76,7 @@ if df is not None and not df.empty:
         fig.update_traces(
             textposition='inside',
             insidetextanchor='middle',
-            marker_cornerradius=15,
+            marker_cornerradius=5,
             textfont=dict(size=10, color="white")
         )
 
@@ -140,3 +140,4 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
+
