@@ -23,13 +23,12 @@ def load_data():
         if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
         if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
-        # Konversi Tanggal (dayfirst=False agar 6/1 dibaca 1 Juni)
+        # Konversi Tanggal
         df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=False, errors='coerce')
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
         df = df.dropna(subset=['Mulai', 'Selesai'])
 
         df = df.sort_values(by=['Bagian', 'Mulai'])
-
         df['Kuartal'] = df['Mulai'].dt.quarter.map({1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4'})
         df['Bulan_Nama'] = df['Mulai'].dt.strftime('%B')
         
@@ -52,7 +51,6 @@ if df is not None and not df.empty:
         q_options = ['Q1', 'Q2', 'Q3', 'Q4']
         selected_q = st.sidebar.multiselect("Pilih Kuartal:", q_options, default=df_filtered['Kuartal'].unique())
         df_filtered = df_filtered[df_filtered['Kuartal'].isin(selected_q)]
-    
     elif time_view == "Per Bulan":
         month_order = ['January', 'February', 'March', 'April', 'May', 'June', 
                        'July', 'August', 'September', 'October', 'November', 'December']
@@ -82,12 +80,12 @@ if df is not None and not df.empty:
             textfont=dict(size=10, color="white")
         )
 
-        # --- PERBAIKAN: GARIS INDIKATOR TANGGAL HARI INI ---
-        # Menggunakan format string YYYY-MM-DD untuk menghindari TypeError
-        today_str = datetime.now().strftime('%Y-%m-%d')
+        # --- SOLUSI ERROR: Konversi ke Timestamp Milidetik ---
+        # Plotly menghitung koordinat tanggal dalam milidetik sejak Epoch
+        today_timestamp = datetime.now().timestamp() * 1000
         
         fig.add_vline(
-            x=today_str, 
+            x=today_timestamp, 
             line_dash="dash", 
             line_color="#FF4B4B", 
             line_width=2,
