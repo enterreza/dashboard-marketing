@@ -120,7 +120,7 @@ if df is not None and not df.empty:
 
         fig.update_yaxes(
             autorange="reversed", 
-            tickfont=dict(size=11),
+            tickfont=dict(size=12, color="black"),
             showgrid=True, 
             gridcolor='rgba(240, 240, 240, 0.5)',
             layer="below traces"
@@ -163,6 +163,7 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
+
 
 
 
