@@ -23,6 +23,7 @@ def load_data():
         if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
         if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
+        # Konversi Tanggal (dayfirst=False agar 6/1 dibaca 1 Juni)
         df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=False, errors='coerce')
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
         df = df.dropna(subset=['Mulai', 'Selesai'])
@@ -81,17 +82,19 @@ if df is not None and not df.empty:
             textfont=dict(size=10, color="white")
         )
 
-        # --- TAMBAHAN: GARIS INDIKATOR TANGGAL HARI INI ---
-        today = datetime.now()
+        # --- PERBAIKAN: GARIS INDIKATOR TANGGAL HARI INI ---
+        # Menggunakan format string YYYY-MM-DD untuk menghindari TypeError
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        
         fig.add_vline(
-            x=today, 
+            x=today_str, 
             line_dash="dash", 
-            line_color="#FF4B4B", # Merah khas Streamlit
+            line_color="#FF4B4B", 
             line_width=2,
             annotation_text="Hari Ini", 
             annotation_position="top",
             annotation_font_color="#FF4B4B",
-            layer="above" # Agar garis berada di atas baris program
+            layer="above"
         )
 
         fig.update_yaxes(
@@ -126,7 +129,7 @@ if df is not None and not df.empty:
 
         fig.update_layout(
             height=chart_height,
-            margin=dict(l=10, r=10, t=80, b=10), # Menambah margin atas (t=80) untuk label "Hari Ini"
+            margin=dict(l=10, r=10, t=80, b=10),
             legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
             dragmode=False
         )
