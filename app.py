@@ -6,7 +6,6 @@ from datetime import datetime
 
 # 1. Konfigurasi Halaman
 st.set_page_config(page_title="Dashboard Marketing 2026", layout="wide")
-st.title("📊 Live Dashboard - Timeline Program Kerja Marketing RS helsa 2026")
 
 # Mengurangi padding agar konten lebih naik ke atas
 st.markdown("""
@@ -29,7 +28,7 @@ with col1:
 
 with col2:
     # Menampilkan judul di sebelah kanan logo dan membuatnya rata tengah secara vertikal
-    st.markdown("<h1 style='text-align: left; margin-top: 20px;'>📊 Timeline Program Kerja 2026</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; margin-top: 20px;'>📊 Live Dashboard - Timeline Program Kerja Marketing RS helsa 2026</h1>", unsafe_allow_html=True)
 # ---------------------------
 
 # 2. Identitas Spreadsheet
@@ -164,5 +163,6 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
+
 
 
