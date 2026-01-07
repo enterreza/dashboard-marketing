@@ -8,6 +8,30 @@ from datetime import datetime
 st.set_page_config(page_title="Dashboard Marketing 2026", layout="wide")
 st.title("📊 Live Dashboard - Timeline Program Kerja Marketing RS helsa 2026")
 
+# Mengurangi padding agar konten lebih naik ke atas
+st.markdown("""
+    <style>
+    .main .block-container {padding-top: 1rem; padding-bottom: 1rem;}
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- BAGIAN LOGO & JUDUL ---
+# Membuat 2 kolom: kolom kiri sempit untuk logo, kolom kanan lebar untuk judul
+col1, col2 = st.columns([1, 5]) 
+
+with col1:
+    # Menampilkan gambar logo.
+    # PASTIKAN file 'logo.png' sudah ada di folder yang sama dengan app.py
+    try:
+        st.image("logo.png", width=150) 
+    except FileNotFoundError:
+        st.warning("File 'logo.png' tidak ditemukan. Pastikan file gambar sudah di-upload.")
+
+with col2:
+    # Menampilkan judul di sebelah kanan logo dan membuatnya rata tengah secara vertikal
+    st.markdown("<h1 style='text-align: left; margin-top: 20px;'>📊 Timeline Program Kerja 2026</h1>", unsafe_allow_html=True)
+# ---------------------------
+
 # 2. Identitas Spreadsheet
 SHEET_ID = '17PUXVz1fWFAQlAnNt02BkFPuQFbiBI5uFAOEtZUMluU'
 SHEET_NAME = 'Master' 
@@ -140,4 +164,5 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
+
 
