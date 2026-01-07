@@ -89,7 +89,7 @@ if df is not None and not df.empty:
             line_dash="dash", 
             line_color="#FF4B4B", 
             line_width=2,
-            annotation_text="Hari Ini", 
+            annotation_text="Today", 
             annotation_position="top",
             annotation_font_color="#FF4B4B",
             layer="above"
@@ -140,4 +140,5 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
+
 
