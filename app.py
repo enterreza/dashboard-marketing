@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import urllib.parse
-from datetime import datetime
 
 # 1. Konfigurasi Halaman
 st.set_page_config(page_title="Dashboard Marketing 2026", layout="wide")
@@ -23,7 +22,6 @@ def load_data():
         if 'Bagian' in df.columns: df['Bagian'] = df['Bagian'].ffill()
         if 'Program Kerja' in df.columns: df['Program Kerja'] = df['Program Kerja'].ffill()
 
-        # Konversi Tanggal (dayfirst=False agar 6/1 dibaca 1 Juni)
         df['Mulai'] = pd.to_datetime(df['Mulai'], dayfirst=False, errors='coerce')
         df['Selesai'] = pd.to_datetime(df['Selesai'], dayfirst=False, errors='coerce')
         df = df.dropna(subset=['Mulai', 'Selesai'])
@@ -75,6 +73,7 @@ if df is not None and not df.empty:
             color_discrete_sequence=px.colors.qualitative.Safe
         )
 
+        # Update sudut membulat dan posisi teks
         fig.update_traces(
             textposition='inside',
             insidetextanchor='middle',
@@ -82,21 +81,7 @@ if df is not None and not df.empty:
             textfont=dict(size=10, color="white")
         )
 
-        # --- PERBAIKAN: GARIS INDIKATOR TANGGAL HARI INI ---
-        # Menggunakan format string YYYY-MM-DD untuk menghindari TypeError
-        today_str = datetime.now().strftime('%Y-%m-%d')
-        
-        fig.add_vline(
-            x=today_str, 
-            line_dash="dash", 
-            line_color="#FF4B4B", 
-            line_width=2,
-            annotation_text="Hari Ini", 
-            annotation_position="top",
-            annotation_font_color="#FF4B4B",
-            layer="above"
-        )
-
+        # Update Sumbu Y - Menggunakan 'below traces'
         fig.update_yaxes(
             autorange="reversed", 
             tickfont=dict(size=11),
@@ -105,6 +90,7 @@ if df is not None and not df.empty:
             layer="below traces"
         )
         
+        # LOGIKA GARIS PEMISAH - Menggunakan 'below' (Bukan 'below traces')
         current_sections = df_filtered['Bagian'].tolist()
         for i in range(len(current_sections) - 1):
             if current_sections[i] != current_sections[i+1]:
@@ -113,9 +99,10 @@ if df is not None and not df.empty:
                     line_dash="solid", 
                     line_color="rgba(150, 150, 150, 0.5)",
                     line_width=2,
-                    layer="below"
+                    layer="below" # DIPERBAIKI: Harus 'below' untuk hline
                 )
 
+        # Penyesuaian Sumbu X
         xaxis_config = dict(side='top', showgrid=True, gridcolor='rgba(230, 230, 230, 0.6)', layer="below traces")
 
         if time_view == "Per Kuartal":
@@ -129,7 +116,7 @@ if df is not None and not df.empty:
 
         fig.update_layout(
             height=chart_height,
-            margin=dict(l=10, r=10, t=80, b=10),
+            margin=dict(l=10, r=10, t=60, b=10),
             legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
             dragmode=False
         )
