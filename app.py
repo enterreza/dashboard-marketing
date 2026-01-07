@@ -2,10 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import urllib.parse
+from datetime import datetime
 
 # 1. Konfigurasi Halaman
 st.set_page_config(page_title="Dashboard Marketing 2026", layout="wide")
-st.title("📊 Timeline Dashboard - Program Kerja Marketing helsa Group 2026")
+st.title("📊 Live Dashboard Timeline Program Kerja")
 
 # 2. Identitas Spreadsheet
 SHEET_ID = '17PUXVz1fWFAQlAnNt02BkFPuQFbiBI5uFAOEtZUMluU'
@@ -73,15 +74,26 @@ if df is not None and not df.empty:
             color_discrete_sequence=px.colors.qualitative.Safe
         )
 
-        # Update sudut membulat dan posisi teks
         fig.update_traces(
             textposition='inside',
             insidetextanchor='middle',
-            marker_cornerradius=5,
+            marker_cornerradius=15,
             textfont=dict(size=10, color="white")
         )
 
-        # Update Sumbu Y - Menggunakan 'below traces'
+        # --- TAMBAHAN: GARIS INDIKATOR TANGGAL HARI INI ---
+        today = datetime.now()
+        fig.add_vline(
+            x=today, 
+            line_dash="dash", 
+            line_color="#FF4B4B", # Merah khas Streamlit
+            line_width=2,
+            annotation_text="Hari Ini", 
+            annotation_position="top",
+            annotation_font_color="#FF4B4B",
+            layer="above" # Agar garis berada di atas baris program
+        )
+
         fig.update_yaxes(
             autorange="reversed", 
             tickfont=dict(size=11),
@@ -90,7 +102,6 @@ if df is not None and not df.empty:
             layer="below traces"
         )
         
-        # LOGIKA GARIS PEMISAH - Menggunakan 'below' (Bukan 'below traces')
         current_sections = df_filtered['Bagian'].tolist()
         for i in range(len(current_sections) - 1):
             if current_sections[i] != current_sections[i+1]:
@@ -99,10 +110,9 @@ if df is not None and not df.empty:
                     line_dash="solid", 
                     line_color="rgba(150, 150, 150, 0.5)",
                     line_width=2,
-                    layer="below" # DIPERBAIKI: Harus 'below' untuk hline
+                    layer="below"
                 )
 
-        # Penyesuaian Sumbu X
         xaxis_config = dict(side='top', showgrid=True, gridcolor='rgba(230, 230, 230, 0.6)', layer="below traces")
 
         if time_view == "Per Kuartal":
@@ -116,7 +126,7 @@ if df is not None and not df.empty:
 
         fig.update_layout(
             height=chart_height,
-            margin=dict(l=10, r=10, t=60, b=10),
+            margin=dict(l=10, r=10, t=80, b=10), # Menambah margin atas (t=80) untuk label "Hari Ini"
             legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
             dragmode=False
         )
@@ -129,5 +139,3 @@ if df is not None and not df.empty:
         st.warning("Tidak ada data untuk filter yang dipilih.")
 else:
     st.info("💡 Menghubungkan ke Google Sheets...")
-
-
